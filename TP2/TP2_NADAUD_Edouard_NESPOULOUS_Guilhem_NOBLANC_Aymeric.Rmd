@@ -1,0 +1,340 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+
+NADAUD Edouard
+NESPOULOUS Guilhem
+NOBLANC Aymeric
+
+
+                    TD 2 - Auto-Regressive Integrated Moving Average
+
+
+##########################################################################################
+
+
+
+
+
+MON TP COMMENCE LIGNE 193 EN EFFET LE DEBUT SONT DES COPIE COLLER D'INTERNET ET DE LA
+PAGE ARMA.SIM QUI CORRESPONDENT AUX REPONSE DEMANDE
+
+
+J'avais fait ces copié collé car nousa vons bcp de gros projet et ne connaisant pas le temps de rendu j'avais peur de ne pas avoir le temps de tout faire. Ayant reglé ce probleme je laisse ces copié coller qui sont de bonne qualité et presentent de bonnes visualisation
+
+
+##########################################################################################
+
+
+
+2) En utilisant la fonction R ​arima.sim​, simuler plusieurs processus AR​p et MA​q (p et q d’un faible ordre de grandeur, c'est-à-dire [0,9]). Rappeler la formule mathématique des processus à simuler et vérifier que le choix de p et q respecte les conditions de stationnarité.
+
+
+
+
+- MA
+```{r}
+set.seed(123)
+## list description for MA(1) model with small coef
+MA_sm <- list(order = c(0, 0, 1), ma = 0.2)
+## list description for MA(1) model with large coef
+MA_lg <- list(order = c(0, 0, 1), ma = 0.8)
+## list description for MA(1) model with large coef
+MA_neg <- list(order = c(0, 0, 1), ma = -0.5)
+## simulate MA(1)
+MA1_sm <- arima.sim(n = 50, model = MA_sm, sd = 0.1)
+MA1_lg <- arima.sim(n = 50, model = MA_lg, sd = 0.1)
+MA1_neg <- arima.sim(n = 50, model = MA_neg, sd = 0.1)
+#with their associated plots.
+
+## setup plot region
+par(mfrow = c(1, 3))
+## plot the ts
+plot.ts(MA1_sm, ylab = expression(italic(x)[italic(t)]), main = expression(paste(theta, 
+    " = 0.2")))
+plot.ts(MA1_lg, ylab = expression(italic(x)[italic(t)]), main = expression(paste(theta, 
+    " = 0.8")))
+plot.ts(MA1_neg, ylab = expression(italic(x)[italic(t)]), main = expression(paste(theta, 
+    " = -0.5")))
+```
+- AR
+
+```{r}
+set.seed(456)
+## list description for AR(1) model with small coef
+AR_sm <- list(order = c(1, 0, 0), ar = 0.1)
+## list description for AR(1) model with large coef
+AR_lg <- list(order = c(1, 0, 0), ar = 0.9)
+## simulate AR(1)
+AR1_sm <- arima.sim(n = 50, model = AR_sm, sd = 0.1)
+AR1_lg <- arima.sim(n = 50, model = AR_lg, sd = 0.1)
+#Now let’s plot the 2 simulated series.
+
+## setup plot region
+par(mfrow = c(1, 2))
+## get y-limits for common plots
+ylm <- c(min(AR1_sm, AR1_lg), max(AR1_sm, AR1_lg))
+## plot the ts
+plot.ts(AR1_sm, ylim = ylm, ylab = expression(italic(x)[italic(t)]), 
+    main = expression(paste(phi, " = 0.1")))
+plot.ts(AR1_lg, ylim = ylm, ylab = expression(italic(x)[italic(t)]), 
+    main = expression(paste(phi, " = 0.9")))
+```
+```{r}
+set.seed(123)
+## list description for AR(1) model with small coef
+AR_pos <- list(order = c(1, 0, 0), ar = 0.5)
+## list description for AR(1) model with large coef
+AR_neg <- list(order = c(1, 0, 0), ar = -0.5)
+## simulate AR(1)
+AR1_pos <- arima.sim(n = 50, model = AR_pos, sd = 0.1)
+AR1_neg <- arima.sim(n = 50, model = AR_neg, sd = 0.1)
+#OK, let’s plot the 2 simulated series.
+
+## setup plot region
+par(mfrow = c(1, 2))
+## get y-limits for common plots
+ylm <- c(min(AR1_pos, AR1_neg), max(AR1_pos, AR1_neg))
+## plot the ts
+plot.ts(AR1_pos, ylim = ylm, ylab = expression(italic(x)[italic(t)]), 
+    main = expression(paste(phi[1], " = 0.5")))
+plot.ts(AR1_neg, ylab = expression(italic(x)[italic(t)]), main = expression(paste(phi[1], 
+    " = -0.5")))
+```
+```{r}
+set.seed(123)
+## the 4 AR coefficients
+AR_p_coef <- c(0.7, 0.2, -0.1, -0.3)
+## empty list for storing models
+AR_mods <- list()
+## loop over orders of p
+for (p in 1:4) {
+    ## assume sd = 1, so not specified
+    AR_mods[[p]] <- arima.sim(n = 10000, list(ar = AR_p_coef[1:p]))
+}
+#Now that we have our four AR( p ) models, lets look at plots of the time series, ACF’s, and PACF’s.
+
+## set up plot region
+par(mfrow = c(3, 4))
+## loop over orders of p
+for (p in 1:4) {
+    plot.ts(AR_mods[[p]][1:50], ylab = paste("AR(", p, ")", sep = ""))
+    acf(AR_mods[[p]], lag.max = 12)
+    pacf(AR_mods[[p]], lag.max = 12, ylab = "PACF")
+}
+```
+
+
+```{r}
+
+set.seed(123)
+#Coéfficient
+AR_p_coef <- c(0.7, 0.2, -0.1, -0.3)
+
+AR_mods <- list()
+#ordreP
+for (p in 1:4) {
+    AR_mods[[p]] <- arima.sim(n = 100, list(ar = AR_p_coef[1:p]))
+}
+
+par(mfrow = c(3, 4))
+
+for (p in 1:4) {
+    plot.ts(AR_mods[[p]][1:25], ylab = paste("AR(", p, ")", sep = ""))
+    acf(AR_mods[[p]], lag.max = 12)
+    pacf(AR_mods[[p]], lag.max = 12, ylab = "PACF")}
+
+```
+
+
+
+
+
+
+
+3) Observer les auto-corrélations empiriques. Que constatez-vous?
+
+
+
+Arma(1,2)
+```{r}
+X <- arima.sim(n=200,list(ar=c(0.8),ma=c(-0.3,0.6)),sd=sqrt(1.5))
+plot(X)
+abline(h=0,lty=2)
+acf(X,type=c("correlation"))
+```
+
+
+
+
+
+
+Arima(2,2)
+```{r}
+X <- arima.sim(n=200,list(ar=c(0.8,0.1),ma=c(-0.3,0.6),order=c(2,0,2)),sd=sqrt(1.5))
+plot(X)
+abline(h=0,lty=2)
+acf(X,type=c("correlation"))
+```
+
+```{r}
+x=arima.sim(model=list(ar=c(1,-0.25),ma=1),300,rand.gen=rnorm)
+plot(x)
+abline(h=0,lty=2)
+acf(X,type=c("correlation"))
+```
+                  
+Partie I : Simulation de processus ARMA
+
+
+
+1) Donner la définition d’un processus ARMA​p, q.​ Quelles sont les conditions sur les coefficients pour que ce processus soit stationnaire?
+
+-Processus stationnaire
+􏰀 sa moyenne E[Xt] ne dépend pas de t (constante),
+􏰀 pour tout h ∈ Z, cov(Xt,Xt−h) ne dépend pas de t (uniquement de h).
+-Processuss Arma stationaire 
+-Pour trouver des coefficients qui correspondent a  un processus stationnaire, il suffit de dÃ©velopper un polynÃ´me dont les racines sont de module >1
+Un processus stationnaire {Xt , t ∈ Z} obéit à un modèle ARMA(p,q) s’il vérifie une équation du type
+Xt = c+φ1Xt−1+φ2Xt−2+...+φpXt−p+Zt+θ1Zt−1+θ2Zt−2+...+θqZt−q,∀t ∈ Z,
+avec :
+􏰀 c ∈ R, (φ1,...,φp) ∈ Rp, (θ1,...,θq) ∈ Rq, 􏰀 {Zt,t ∈ Z} un bruit blanc.
+
+
+
+
+
+
+
+
+
+2) En utilisant la fonction R ​arima.sim​, simuler plusieurs processus AR​p et MA​q (p et q d’un faible ordre de grandeur, c'est-à-dire [0,9]). Rappeler la formule mathématique des processus à simuler et vérifier que le choix de p et q respecte les conditions de stationnarité.
+
+# exemple : (1-X/2)^2=1-X+X^2/4. On peut donc prendre a1=1, a2=-1/4.
+```{r}
+modele<-list(ar=(c(1,-1/4)))
+n=500
+x=arima.sim(modele,n)
+plot(x)
+#MA : On essaie avec q=2.
+modele<-list(ma=(c(2,3)))
+y=arima.sim(modele,n)
+plot(y)
+
+```
+
+3) Observer les auto-corrélations empiriques. Que constatez-vous?
+
+```{r}
+acf(x,lag.max=20,type=c('correlation'))
+acf(y,lag.max=20,type=c('correlation'))
+#les autocotelation decroissent vers 0, voici les conclusions possible
+```
+
+```{r}
+pacf(x,lag.max=20)
+pacf(y,lag.max=20)
+#ici rien de significatif, en effet p,q=2 donc petit cela n'est donc pas siginifique. Les autosocorrelaitions doivent etre nulle
+```
+
+4) Simuler plusieurs ARMA​p,q.​ Observer et interpréter les auto-corrélations
+empiriques
+
+```{r}
+modele=list(ar=c(0.2,0.4,0.3), ma =c(0.5,0.2))
+x=arima.sim(modele,n)
+plot(x)
+acf(x,lag.max=20)
+pacf(x,lag.max=20)
+# toutes les valeurs de xt sont >0 on va avoir des autocorrelations tendant vers 0. Les auto-corrolations partielles sont globalement nulles pcar p,q sont petit
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Partie II : Analyse des précipitations mensuelles à San Francisco Charger les données depuis le fichier sanfran.dat, disponible sur le moodle.
+1)
+a) La série temporelle est-elle stationnaire? Si non, la modifier pour qu’elle le
+devienne et sauvegarder cette série temporelle dans une nouvelle
+variable.
+b) Proposer un modèle AR​p​ ou AM​q​ adapté sur ces données. Valider la
+modélisation en testant les résidus.
+2) En utilisant les données d’origine de 1932 à 1963, tester un modèle AR​2​ avec
+une composante saisonnière, c’est-à-dire un modèle SARIMA​2,0,0,12.​
+3) Calculer et afficher les résidus du modèle SARIMA​2,0,0,12.​
+4) Utiliser le modèle précédent pour prédire les précipitations mensuelles de 1964,
+1965 et 1966. Superposer sur un graphique les prédictions et les valeurs réelles.
+5) Faire de même pour le modèle AR​2​ proposé dans la partie 1), sur les données
+correspondantes.
+6) Quel est le meilleur modèle de prédiction, graphiquement?
+7) Comment valider, objectivement, la réponse précédente? Mettre en place ces
+tests et comparer les résultats à ceux obtenus graphiquement.
+
+```{r}
+data<-scan("data.dat",skip=1)
+x=ts(data,frequency=12)
+plot(x)
+```
+
+
+#La série n'est pas stationnaire, la moyenne varie périodiquement. La periode semble de 12 
+
+
+```{r}
+y=diff(x,lag=12,1)
+plot(y)
+#Serie stationaire mnt
+```
+
+```{r}
+#On utilise la fonction toute faite de R (qui minimise le critere¨AIC).
+out<-ar(y,aic=TRUE,order.max=NULL)
+ 
+Box.test(out$resid,lag=5)
+#On trouve une p-valeur Ã  0,9997 > 0,05 donc on garde l'hyptohese¨se "bruit blanc".
+
+x<-scan("data.dat",skip=1)
+x=ts(x,frequency=12)
+xw=window(x,c(1,1),c(32,12))
+```
+```{r}
+out<-arima(xw,order=c(2,0,0),seasonal=list(order=c(2,0,0),period=12))
+plot(out$resid)
+
+Box.test(out$resid,lag=5)
+#On trouve une p-valeur a 0,8217 > 0,05 donc on garde ll'hypotese de "bruit blanc".
+
+```
+```{r}
+p=predict(out,3*12)
+xr=window(x,c(30,1),c(35,12))
+plot(xr)
+lines(p$pred,col="red")
+```
+
+#Modèle AR.
+out=ar(xw,aic=TRUE,order.max=NULL)
+p=predict(out,3*12)
+#Ne fonctionne pas je n'ai aps réussi a resoudre le pb
+
+Néanmoins apres de nombreuse recherche sur internet et des analyse le processus sarima est plus performant dans ses prediction que le processus AR ou meme que Holt-Winters
+
+

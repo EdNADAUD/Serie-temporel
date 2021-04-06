@@ -1,0 +1,114 @@
+Groupe: 4A IAD Groupe 1
+
+Edouard NADAUD 
+Guilhem NESPOULOUS
+Aymeric NOBLANC
+
+
+1. Définir un modèle additif avec:
+- une tendance quadratique (c’est-à-dire du type at^2 +bt+c)
+- une composante saisonnière fonction périodique de période 4
+- une erreur de type bruit blanc gaussien
+Pour simuler une série temporelle trimestrielle débutant au deuxième trimestre 1986 et finissant au premier trimestre 2001.
+Nous choisirons les différents paramètres du modèle : coefficients de la tendance (a, b et c), expression de la saisonnalité et écart-type du bruit blanc).
+
+(at^2 +bt+c)+cos(2π(t/4 − 1986))+ ε t 
+
+commence au 2eme semestre 1986 soit avril 1986 fin premier semestre 2001 soit janvier 2001
+    * Nombre de mois = 13*12+9=165, notre bruit gaussien fait aller de 1 a 165 de même pour nos données ( 167),
+    * on choisit un écart type de 1 
+    
+    Modele additif Xt=Zt+St+εt
+      
+        Zt=(0.0001*i^2+0.04*i+2)
+        St=cos(2*pi*((i/4 )- 1986))
+        εt=erreur[i]
+        
+
+        
+    
+```{r}
+data=array()
+pi=3.14
+nbrmonth=167
+erreur<-rnorm(nbrmonth,sd=1,mean=0)
+
+```
+
+On choisit 
+a=0.0001
+b=0.04
+c=2
+
+
+Creation de notre serie temporelle numérique
+
+```{r}
+for (i in 1:nbrmonth){
+  data[i]= (0.0001*i^2+0.04*i+2)+cos(2*pi*((i/4 )- 1986))+erreur[i]
+  
+}
+```
+ On faitcommencer notre serie temporelle au mois de mars 1986
+ 
+```{r}
+data<-as.ts(data)
+
+data<-ts(data,start=c(1986,3),frequency=4)
+``` 
+
+Affichage de notre serie temporelle
+
+```{r}
+ts.plot(data)
+```
+
+2. Afficher les différentes composantes. Tracer la tendance, la saisonnalité, le bruit ainsi que la série chronologique obtenue.
+
+```{r}
+data.dcp= decompose(data,type="additive") 
+plot(data.dcp)
+help(decompose)
+```
+
+Pour estimer la tendance nous allons calculer nos moyennes mobiles qui seront un bon estimateur de la tendance (avec le bruit en plus)
+
+
+```{r}
+filt<-rep(1/4,3)
+filt<-(c(1/8,filt,1/8))
+Z<-filter(data,filter=filt,sides=2)
+Z<-ts(Z,start=c(1986,3),frequency=4)
+ts.plot(Z)
+```
+
+
+
+Nous allons maintenant optenir la saisonalité pour cela nouss faisons nos data moins la tendance et le bruit gaussien ( Z)
+```{r}
+S<-data-Z
+s<-tapply(S,cycle(S),mean,na.rm=T)
+s<-s-mean(s)
+plot(s)
+```
+
+
+
+
+
+
+
+3. Superposer les séries annuelles des années 1987 à 2000.
+
+```{r}
+ts.plot(matrix(window(data,1986,c(1999,12)),12))
+```
+
+
+4. Extraire une sous série commençant au deuxième trimestre 1989 et finissant au
+troisième trimestre 1991.
+
+```{r}
+Xdata=window(data,start=c(1989,4),end=c(1991,9))
+plot(Xdata)
+```

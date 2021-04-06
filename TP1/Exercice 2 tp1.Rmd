@@ -1,0 +1,223 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+Groupe: 4A IAD Groupe 1
+
+Edouard NADAUD 
+Guilhem NESPOULOUS
+Aymeric NOBLANC
+
+
+
+
+
+Exercice :    à rendre pour le dimanche 7 mars 2021 à 23h30
+Simuler une série chronologique(Y​t)​t=1,...,100
+suivant le modèle Y​t​ = 0,01t + 1 + 2 sin(2πt/5) + ε​t​ ,
+où(ε​t)​t est un bruit blanc gaussien de variance 1/100.
+
+```{r}
+data=array()
+erreur<-rnorm(100,sd=1/10,mean=0)
+```
+
+```{r}
+for (i in 1:100){
+  data[i]= (0.01*i)+1+(2*sin((2*pi*i)/5) )+ erreur[i]
+}
+```
+
+On affiche notre serie temporelle
+
+
+```{r}
+data<-as.ts(data)
+data<-ts(data,start=2000,frequency=5)
+ts.plot(data)
+
+```
+
+
+
+Déterminer la tendance, la saisonnalité (période) de cette série chronologique. Les tracer.
+
+```{r}
+data.dcp= decompose(data,type="add") 
+plot(data.dcp)
+```
+
+
+
+
+Notre serie temporelle est un modele aditif de forme
+    
+    Modele additif Xt=Zt+St+εt
+      
+        Zt=(0.01*i)+1
+        St=(2*sin((2*pi*i)/5))
+        εt=erreur[i]
+        
+        
+        Notre St est une fonction de periode 5 nous avons donc une saisonalité de 5. Notre Zt est une fonction affiche de coéfficient directeur 0.01, notre tendance sera donc croisante. Néanmoins le coéfficient directeur etant tres faible la fonction aura ue croissante extrement faible et donc une tendance plutot constante.
+        
+        
+Utiliser la méthode des moyennes mobiles ci-dessus pour éliminer la saisonnalité puis estimer les coefficients du saisonnier.
+
+
+
+
+```{r}
+filt<-rep(1/5,5)
+Z<-filter(data,filter=filt,sides=2)
+Z<-ts(Z,start=2000,frequency=5)
+ts.plot(Z)
+```
+
+
+Estimation de la composante saisonnière
+S la saisonnalité
+
+```{r}
+S<-data-Z
+```
+
+
+
+
+
+Estimation c des coefficients du saisonnier Série corrigée des variations saisonnières
+Voici la saisonalité sur une periode 5
+```{r}
+s<-tapply(S,cycle(S),mean,na.rm=T)
+s<-s-mean(s)
+plot(s)
+
+CVS<-matrix(1,20,5)
+```
+
+
+
+
+Calcul de XCV S = X − S
+
+Nous avons 5 données par an su 20 ans
+```{r}
+for (i in 1 :20) {
+  for (j in 1 :5) {
+    CVS[i,j]=t(matrix(data,5,20))[i,j]-s[j]
+  }
+}
+```
+
+```{r}
+CVS=as.vector(t(CVS)) 
+CVS=as.ts(CVS) 
+CVS=ts(CVS,start=2000,frequency=5)
+```
+
+
+```{r}
+ts.plot(data)
+ts.plot(CVS)
+```
+coefficient saisonnier
+
+
+```{r}
+s
+```
+
+Utiliser une régression linéaire par moindres carrés pour estimer les coefficients de la tendance.
+
+
+```{r}
+y=time(CVS)
+CVS.lm=lm(CVS~y)
+CVS.lm$coefficient 
+
+
+```
+Comparer les estimateurs avec les vrais coefficients.
+
+yreel=0.01
+ycalculé=0.05
+
+Coefficient 
+reel : 
+1.903555650  1.156133321 -1.155990654 -1.895566966 -0.008131351
+trouvé
+1.902113  1.175571  -1.175571  -1.902113   -4.898587e-16
+
+
+
+```{r}
+
+for (i in 1 :5) {
+  print(2*sin((2*pi*i)/5))
+}
+
+```
+Proposer une prévision à l’horizon 3.
+
+```{r}
+X1=rep(1,15)
+for (i in 1:15)
+  {X1[i]=-102.44482083+0.05170816*(2020+5%%1+(i-1)/5) +s[i%%5+1]}
+  
+X2=c(as.vector(data),X1)
+
+X2=as.ts(X2)
+X2=ts(X2,start=2000,frequency=5)
+plot(X2)
+
+
+
+
+
+```
+
+
+ Analyser les résidus.Les représenter.
+ 
+```{r}
+res=CVS-CVS.lm$fitted.values
+res=res/sqrt(var(res))
+acf(res)
+hist(res)
+qqnorm(res)
+abline(0,1)
+```
+Appliquer la fonction decompose et comparer avec les vraies valeurs.
+```{r}
+data.dcp= decompose(data,type="add") 
+plot(data.dcp)
+```
+ 
+comparaison de la tendance decompose versus reel
+Nous pouvons remarqué que les valeurs réelle sont pratiquement identique aux valeurs estimée de decompose
+
+
+```{r}
+plot(data.dcp$trend)
+plot(Z)
+```
+comparaison de la saisonalité decompose versus reel
+Nous pouvons remarqué que les valeurs réelle sont identique identique aux valeurs estimée de decompose
+```{r}
+if(sum(data.dcp$figure==s)==length(s)){
+  print("les valeurs sont identique")
+}
+
+```
+
+
+
+
+```{r}
+plot(data.dcp$figure)
+plot(s)
+```
+
+
